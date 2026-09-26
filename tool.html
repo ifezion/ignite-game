@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark Calculator — Bonding Curve Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 40px 0 20px; }
+        .logo { font-size: 60px; margin-bottom: 10px; }
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        .subtitle { color: #888; font-size: 14px; }
+        .card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid #2a2a2a;
+        }
+        .card h2 { font-size: 16px; color: #3b82f6; margin-bottom: 16px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: #3b82f6;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { opacity: 0.9; }
+        .result { display: none; margin-top: 16px; }
+        .result.show { display: block; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #888; font-size: 14px; }
+        .stat-value { font-weight: 600; font-size: 16px; }
+        .stat-value.highlight { color: #06b6d4; }
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px 0;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4, #fbbf24);
+            border-radius: 12px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 40px;
+        }
+        .curve-visual {
+            height: 120px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            margin: 16px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .curve-canvas { width: 100%; height: 100%; }
+        .stock-section {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid #0f3460;
+        }
+        .stock-section h2 { color: #ffd700; }
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a2744;
+        }
+        .stock-item:last-child { border-bottom: none; }
+        .stock-name { font-size: 14px; }
+        .stock-price { font-size: 14px; color: #00ff88; }
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #555;
+            font-size: 12px;
+        }
+        .footer a { color: #3b82f6; text-decoration: none; }
+        .token-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #3b82f6;
+            margin-top: 8px;
+        }
+        .tip {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #888;
+        }
+        .tip strong { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⚡</div>
+            <h1>Spark Calculator</h1>
+            <p class="subtitle">Calculate bonding curve progress on vibe/vibe</p>
+            <div class="token-badge">Powered by $IGNITE</div>
+        </div>
+
+        <div class="card">
+            <h2>🧮 Bonding Curve Calculator</h2>
+            <div class="input-group">
+                <label>Current Market Cap ($)</label>
+                <input type="number" id="currentMcap" placeholder="e.g. 5000" />
+            </div>
+            <div class="input-group">
+                <label>Target Market Cap ($)</label>
+                <input type="number" id="targetMcap" value="69000" />
+            </div>
+            <button class="btn" onclick="calculate()">Calculate</button>
+            
+            <div class="result" id="result">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Current Progress</span>
+                    <span class="stat-value highlight" id="progressPct">0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">ETH Needed to Graduate</span>
+                    <span class="stat-value" id="ethNeeded">0 ETH</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">USD Needed</span>
+                    <span class="stat-value" id="usdNeeded">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Price Impact (1 ETH)</span>
+                    <span class="stat-value highlight" id="priceImpact">0%</span>
+                </div>
+                <div class="curve-visual">
+                    <canvas id="curveCanvas" class="curve-canvas"></canvas>
+                </div>
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Tokens close to graduation have higher visibility on vibe/vibe. Look for tokens above 80% for potential graduates.
+                </div>
+            </div>
+        </div>
+
+        <div class="card stock-section">
+            <h2>📈 Spark Stock Index</h2>
+            <p style="color: #888; font-size: 12px; margin-bottom: 12px;">High-growth tokenized tech stocks</p>
+            <div class="stock-item">
+                <span class="stock-name">NVIDIA (NVDA)</span>
+                <span class="stock-price">$142.50</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">AMD (AMD)</span>
+                <span class="stock-price">$168.40</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">TSMC (TSM)</span>
+                <span class="stock-price">$185.60</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Broadcom (AVGO)</span>
+                <span class="stock-price">$195.30</span>
+            </div>
+            <div class="stock-item">
+                <span class="stock-name">Meta (META)</span>
+                <span class="stock-price">$525.80</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            Built for the <a href="https://testnet.vibevibe.fun">vibe/vibe</a> community<br>
+            One spark ignites everything ⚡
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const current = parseFloat(document.getElementById('currentMcap').value) || 0;
+            const target = parseFloat(document.getElementById('targetMcap').value) || 69000;
+            
+            if (current <= 0 || target <= 0) return;
+            
+            const pct = Math.min((current / target) * 100, 100);
+            const remaining = target - current;
+            const ethPrice = 2691.60;
+            const ethNeeded = remaining / ethPrice;
+            const priceImpact = (1 / (current / 1000)) * 100;
+            
+            document.getElementById('result').classList.add('show');
+            document.getElementById('progressPct').textContent = pct.toFixed(1) + '%';
+            document.getElementById('ethNeeded').textContent = ethNeeded.toFixed(4) + ' ETH';
+            document.getElementById('usdNeeded').textContent = '$' + remaining.toLocaleString();
+            document.getElementById('priceImpact').textContent = priceImpact.toFixed(2) + '%';
+            
+            const fill = document.getElementById('progressFill');
+            fill.style.width = pct + '%';
+            fill.textContent = pct.toFixed(0) + '%';
+            
+            drawCurve(current, target);
+        }
+
+        function drawCurve(current, target) {
+            const canvas = document.getElementById('curveCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+            
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            const padding = 20;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw curve
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i <= w - padding * 2; i++) {
+                const x = padding + i;
+                const progress = i / (w - padding * 2);
+                const mcap = target * progress * progress;
+                const y = h - padding - (mcap / target) * (h - padding * 2);
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Draw current point
+            const currentPct = current / target;
+            const currentX = padding + currentPct * (w - padding * 2);
+            const currentY = h - padding - currentPct * currentPct * (h - padding * 2);
+            
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#06b6d4';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Label
+            ctx.fillStyle = '#fff';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('$' + (current / 1000).toFixed(1) + 'K', currentX + 10, currentY - 5);
+        }
+
+        window.addEventListener('resize', () => {
+            const result = document.getElementById('result');
+            if (result.classList.contains('show')) {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>
