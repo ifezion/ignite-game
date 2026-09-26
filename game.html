@@ -6,34 +6,29 @@
     <title>Spark Dash — $IGNITE</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a14; color: #fff; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
         canvas { display: block; }
         .hud { position: fixed; top: 12px; left: 12px; z-index: 10; pointer-events: none; }
         .hud-row { display: flex; gap: 8px; margin-bottom: 6px; }
-        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 13px; backdrop-filter: blur(4px); }
+        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px); }
         .hud-val { font-weight: 700; }
         .hud-val.score { color: #ffd700; }
         .hud-val.combo { color: #00ff88; }
         .hud-val.time { color: #3b82f6; }
         .timer-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,#3b82f6,#06b6d4); z-index: 15; transition: width 1s linear; }
-        .combo-pop { position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%) scale(0.5); font-size: 52px; font-weight: 800; opacity: 0; z-index: 20; pointer-events: none; transition: none; }
-        .start { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .start { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .start h1 { font-size: 36px; background: linear-gradient(135deg,#3b82f6,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
         .start p { color: #666; font-size: 14px; margin-bottom: 20px; text-align: center; max-width: 280px; }
-        .start .types { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .start .type { padding: 8px 12px; background: #141414; border-radius: 8px; font-size: 12px; text-align: center; border: 1px solid #222; }
-        .start .type .icon { font-size: 20px; }
         .btn { padding: 14px 32px; border: none; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
         .btn:active { transform: scale(0.96); }
         .btn-go { background: linear-gradient(135deg,#3b82f6,#06b6d4); }
         .btn-tw { background: linear-gradient(135deg,#1da1f2,#0d8ecf); }
-        .btn-zen { background: linear-gradient(135deg,#333,#444); margin-top: 8px; font-size: 14px; padding: 10px 24px; }
-        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
         .game-over.show { display: flex; }
         .game-over h2 { font-size: 28px; color: #3b82f6; margin-bottom: 8px; }
         .game-over .final { font-size: 52px; font-weight: 800; color: #ffd700; }
         .game-over .sub { color: #888; font-size: 13px; margin: 8px 0 4px; }
-        .game-over .recap { background: #141414; border-radius: 12px; padding: 14px; margin: 12px 0; font-size: 13px; width: 260px; }
+        .game-over .recap { background: #14141f; border-radius: 12px; padding: 14px; margin: 12px 0; font-size: 13px; width: 260px; }
         .game-over .recap div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
         .game-over .recap .k { color: #666; } .game-over .recap .v { color: #fff; font-weight: 600; }
         .stock-bar { position: fixed; top: 12px; right: 12px; z-index: 10; pointer-events: none; }
@@ -58,19 +53,10 @@
     <div class="stock-tag"><span class="n">AMD</span> <span class="p">$168</span></div>
 </div>
 
-<div class="combo-pop" id="comboPop"></div>
-
 <div class="start" id="startScreen">
     <h1>⚡ Spark Dash</h1>
     <p>Tap sparks before they fade! Avoid bombs. Chain combos for massive points.</p>
-    <div class="types">
-        <div class="type"><div class="icon">⚡</div>Standard</div>
-        <div class="type"><div class="icon">💨</div>Fast</div>
-        <div class="type"><div class="icon">✨</div>Split</div>
-        <div class="type"><div class="icon">💣</div>Bomb</div>
-    </div>
-    <button class="btn btn-go" onclick="startGame(false)">⚡ 30s Sprint</button>
-    <button class="btn btn-zen" onclick="startGame(true)">🧘 Zen Mode</button>
+    <button class="btn btn-go" onclick="startGame()">⚡ 30s Sprint</button>
 </div>
 
 <div class="game-over" id="go">
@@ -78,7 +64,7 @@
     <div class="final" id="goScore">0</div>
     <div class="sub">Final Score</div>
     <div class="recap" id="recap"></div>
-    <button class="btn btn-go" onclick="startGame(false)">⚡ Play Again</button>
+    <button class="btn btn-go" onclick="startGame()">⚡ Play Again</button>
     <button class="btn btn-tw" onclick="share()">📤 Share</button>
 </div>
 
@@ -89,40 +75,20 @@ let W, H;
 function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
 resize(); addEventListener('resize', resize);
 
-// Spark types
 const TYPES = {
-    std:  { color:'#3b82f6', glow:'rgba(59,130,246,0.3)', life:90,  points:10, size:22, speed:1.2 },
-    fast: { color:'#06b6d4', glow:'rgba(6,182,212,0.3)',   life:50,  points:20, size:18, speed:2.5 },
-    split:{ color:'#a855f7', glow:'rgba(168,85,247,0.3)',  life:70,  points:15, size:20, speed:1.5 },
-    bomb: { color:'#ff4444', glow:'rgba(255,68,68,0.3)',   life:100, points:-30, size:24, speed:0.8 }
+    std:  { color:'#3b82f6', glow:'rgba(59,130,246,0.3)', life:90, points:10, size:22, speed:1.2 },
+    fast: { color:'#06b6d4', glow:'rgba(6,182,212,0.3)', life:50, points:20, size:18, speed:2.5 },
+    split:{ color:'#a855f7', glow:'rgba(168,85,247,0.3)', life:70, points:15, size:20, speed:1.5 },
+    bomb: { color:'#ff4444', glow:'rgba(255,68,68,0.3)', life:100, points:-30, size:24, speed:0.8 }
 };
 
-let sparks, particles, score, combo, maxCombo, comboDecay, timeLeft, gameActive, isZen;
-let spawnTimer, patternTimer, currentPattern, patternStep;
-let totalTapped, totalMissed, firstMissTime, roundTime;
-
-// Patterns (arrays of spawn instructions)
-const PATTERNS = [
-    // Ring
-    (cx,cy) => { for(let a=0;a<6;a++){const r=Math.PI*2/6*a; spawnAt(cx+Math.cos(r)*120, cy+Math.sin(r)*120, 'std');} },
-    // Line
-    (cx,cy) => { for(let i=0;i<5;i++) spawnAt(100+i*(W-200)/4, cy, 'std'); },
-    // V-shape
-    (cx,cy) => { for(let i=0;i<4;i++){ spawnAt(cx-i*40, cy-i*30, 'std'); spawnAt(cx+i*40, cy-i*30, 'std'); } },
-    // Fast burst
-    (cx,cy) => { for(let i=0;i<4;i++) spawnAt(Math.random()*W*0.6+W*0.2, Math.random()*H*0.6+H*0.2, 'fast'); },
-    // Mixed
-    (cx,cy) => { spawnAt(cx-80,cy,'std'); spawnAt(cx+80,cy,'std'); spawnAt(cx,cy-60,'fast'); spawnAt(cx,cy+60,'bomb'); }
-];
+let sparks, particles, score, combo, maxCombo, comboDecay, timeLeft, gameActive;
+let spawnTimer, roundTime, totalTapped, totalMissed, firstMissTime;
+let floatTexts, shakeMag;
 
 function spawnAt(x, y, type) {
     const t = TYPES[type];
-    sparks.push({
-        x, y, type, color:t.color, glow:t.glow,
-        life:t.life, maxLife:t.life, size:t.size,
-        vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed,
-        points:t.points, ring:0
-    });
+    sparks.push({x, y, type, color:t.color, glow:t.glow, life:t.life, maxLife:t.life, size:t.size, vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed, points:t.points});
 }
 
 function spawnRandom() {
@@ -132,196 +98,141 @@ function spawnRandom() {
     else if(r < 0.25) type = 'split';
     else if(r < 0.32) type = 'bomb';
     const t = TYPES[type];
-    sparks.push({
-        x: 60+Math.random()*(W-120), y: 60+Math.random()*(H-120),
-        type, color:t.color, glow:t.glow,
-        life:t.life, maxLife:t.life, size:t.size,
-        vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed,
-        points:t.points, ring:0
-    });
+    sparks.push({x:60+Math.random()*(W-120), y:60+Math.random()*(H-120), type, color:t.color, glow:t.glow, life:t.life, maxLife:t.life, size:t.size, vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed, points:t.points});
 }
 
-function startGame(zen) {
+function startGame() {
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('go').classList.remove('show');
-    sparks=[]; particles=[]; score=0; combo=1; maxCombo=1; comboDecay=0;
-    timeLeft=30; gameActive=true; isZen=zen;
-    spawnTimer=0; patternTimer=0; currentPattern=null; patternStep=0;
-    totalTapped=0; totalMissed=0; firstMissTime=0; roundTime=0;
-    updateHUD();
+    sparks=[]; particles=[]; floatTexts=[];
+    score=0; combo=1; maxCombo=1; comboDecay=0;
+    timeLeft=30; gameActive=true;
+    spawnTimer=0; roundTime=0; totalTapped=0; totalMissed=0; firstMissTime=0; shakeMag=0;
 }
 
 function tap(x, y) {
     if(!gameActive) return;
     let hit = false;
-    // Check sparks from top (newest) to bottom
     for(let i=sparks.length-1; i>=0; i--) {
         const s = sparks[i];
         const dx=x-s.x, dy=y-s.y;
         if(Math.sqrt(dx*dx+dy*dy) < s.size + 10) {
             hit = true;
             if(s.type === 'bomb') {
-                // Hit bomb: penalty
                 score = Math.max(0, score + s.points);
                 combo = 1; comboDecay = 0;
                 spawnBurst(s.x, s.y, '#ff4444', 15);
                 shake(6);
-                if(!firstMissTime) firstMissTime = roundTime;
             } else {
-                // Hit spark
                 const pts = Math.floor(s.points * combo);
                 score += pts;
                 combo += 0.5;
-                comboDecay = 60; // frames before combo decays
+                comboDecay = 60;
                 if(combo > maxCombo) maxCombo = combo;
                 totalTapped++;
                 spawnBurst(s.x, s.y, s.color, 10);
-                showFloat(s.x, s.y, '+'+pts, s.color);
-
-                // Split spark: spawn 2 fast sparks
-                if(s.type === 'split') {
-                    spawnAt(s.x-30, s.y, 'fast');
-                    spawnAt(s.x+30, s.y, 'fast');
-                }
+                floatTexts.push({x:s.x, y:s.y, text:'+'+pts, color:s.color, life:30});
+                if(s.type === 'split') { spawnAt(s.x-30, s.y, 'fast'); spawnAt(s.x+30, s.y, 'fast'); }
             }
             sparks.splice(i, 1);
             break;
         }
     }
-    if(!hit) {
-        // Missed tap
-        combo = 1; comboDecay = 0;
-        totalMissed++;
-        if(!firstMissTime) firstMissTime = roundTime;
-    }
+    if(!hit) { combo = 1; comboDecay = 0; totalMissed++; if(!firstMissTime) firstMissTime = roundTime; }
 }
-
-let floatTexts = [];
-function showFloat(x, y, text, color) {
-    floatTexts.push({x, y, text, color, life:30});
-}
-
-let shakeMag = 0;
-function shake(m) { shakeMag = Math.max(shakeMag, m); }
 
 function spawnBurst(x, y, color, n) {
-    for(let i=0;i<n;i++) particles.push({
-        x, y, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8,
-        life:15+Math.random()*10, color
-    });
+    for(let i=0;i<n;i++) particles.push({x, y, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, life:15+Math.random()*10, color});
 }
+
+function shake(m) { shakeMag = Math.max(shakeMag, m); }
 
 function update() {
     if(!gameActive) return;
     roundTime += 1/60;
-
-    // Timer
-    if(!isZen) {
-        timeLeft -= 1/60;
-        document.getElementById('hTime').textContent = Math.ceil(timeLeft);
-        document.getElementById('timerBar').style.width = (timeLeft/30*100)+'%';
-        if(timeLeft <= 0) { endGame(); return; }
-    }
-
-    // Combo decay
+    timeLeft -= 1/60;
+    document.getElementById('hTime').textContent = Math.ceil(timeLeft);
+    document.getElementById('timerBar').style.width = (timeLeft/30*100)+'%';
+    if(timeLeft <= 0) { endGame(); return; }
+    
     if(comboDecay > 0) comboDecay--;
     else if(combo > 1) combo = Math.max(1, combo - 0.02);
-
-    // Spawn
+    
     spawnTimer++;
-    if(spawnTimer > 40 - Math.min(roundTime, 20)) {
-        spawnTimer = 0;
-        spawnRandom();
-    }
-
-    // Pattern spawn
-    patternTimer++;
-    if(patternTimer > 180 && !currentPattern) {
-        patternTimer = 0;
-        currentPattern = PATTERNS[Math.floor(Math.random()*PATTERNS.length)];
-        currentPattern(W/2, H/2);
-        setTimeout(() => currentPattern = null, 2000);
-    }
-
-    // Update sparks
+    if(spawnTimer > 40 - Math.min(roundTime, 20)) { spawnTimer = 0; spawnRandom(); }
+    
     sparks = sparks.filter(s => {
-        s.x += s.vx; s.y += s.vy;
-        s.life--;
-        // Bounce off edges
+        s.x += s.vx; s.y += s.vy; s.life--;
         if(s.x < s.size || s.x > W-s.size) s.vx *= -1;
         if(s.y < s.size || s.y > H-s.size) s.vy *= -1;
-        if(s.life <= 0) {
-            if(s.type !== 'bomb') totalMissed++;
-            return false;
-        }
+        if(s.life <= 0) { if(s.type !== 'bomb') totalMissed++; return false; }
         return true;
     });
-
-    // Particles
-    particles = particles.filter(p => { p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--; return p.life>0; });
-
-    // Float texts
-    floatTexts = floatTexts.filter(f => { f.y-=1.5; f.life--; return f.life>0; });
-
-    // Shake decay
+    
+    particles = particles.filter(p => { p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life--; return p.life>0; });
+    floatTexts = floatTexts.filter(f => { f.y-=1.5;f.life--; return f.life>0; });
+    
     shakeMag *= 0.9;
     if(shakeMag < 0.5) shakeMag = 0;
-
+    
     updateHUD();
 }
 
 function draw() {
     cx.save();
-    if(shakeMag > 0) cx.translate((Math.random()-0.5)*shakeMag, (Math.random()-0.5)*shakeMag);
-
-    cx.fillStyle = '#0a0a0a';
+    if(shakeMag > 0) cx.translate((Math.random()-0.5)*shakeMag,(Math.random()-0.5)*shakeMag);
+    
+    cx.fillStyle = '#0a0a14';
     cx.fillRect(0, 0, W, H);
-
-    // Sparks
+    
+    // Grid lines
+    cx.strokeStyle = 'rgba(59,130,246,0.05)';
+    cx.lineWidth = 1;
+    for(let x = 0; x < W; x += 40) { cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke(); }
+    for(let y = 0; y < H; y += 40) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+    
+    // Sparks (Vibe Viber style)
     sparks.forEach(s => {
         const alpha = s.life / s.maxLife;
+        
         // Glow
         cx.fillStyle = s.glow;
         cx.globalAlpha = alpha * 0.6;
         cx.beginPath(); cx.arc(s.x, s.y, s.size*1.5, 0, Math.PI*2); cx.fill();
-        // Body
+        
+        // Body (cube style)
         cx.fillStyle = s.color;
         cx.globalAlpha = alpha;
-        cx.beginPath(); cx.arc(s.x, s.y, s.size, 0, Math.PI*2); cx.fill();
-        // Inner
+        cx.fillRect(s.x-s.size/2, s.y-s.size/2, s.size, s.size);
+        
+        // Eyes (Vibe Viber style)
         cx.fillStyle = '#fff';
-        cx.beginPath(); cx.arc(s.x, s.y, s.size*0.35, 0, Math.PI*2); cx.fill();
-        // Shrinking ring (timing indicator)
+        cx.fillRect(s.x-s.size/4, s.y-s.size/4, s.size/3, s.size/3);
+        cx.fillRect(s.x+s.size/12, s.y-s.size/4, s.size/3, s.size/3);
+        
+        // Pupils
+        cx.fillStyle = '#0a0a14';
+        cx.fillRect(s.x-s.size/6, s.y-s.size/6, s.size/6, s.size/6);
+        cx.fillRect(s.x+s.size/6, s.y-s.size/6, s.size/6, s.size/6);
+        
+        // Shrinking ring
         if(s.type !== 'bomb') {
-            const ringAlpha = alpha * 0.4;
             cx.strokeStyle = s.color;
-            cx.globalAlpha = ringAlpha;
+            cx.globalAlpha = alpha * 0.4;
             cx.lineWidth = 2;
             cx.beginPath(); cx.arc(s.x, s.y, s.size + (1-alpha)*20, 0, Math.PI*2); cx.stroke();
         }
+        
         // Type indicator
-        if(s.type === 'fast') {
-            cx.fillStyle = '#fff';
-            cx.globalAlpha = alpha;
-            cx.font = '10px sans-serif';
-            cx.textAlign = 'center';
-            cx.fillText('💨', s.x, s.y+4);
-        } else if(s.type === 'split') {
-            cx.fillStyle = '#fff';
-            cx.globalAlpha = alpha;
-            cx.font = '10px sans-serif';
-            cx.textAlign = 'center';
-            cx.fillText('✨', s.x, s.y+4);
-        } else if(s.type === 'bomb') {
-            cx.fillStyle = '#fff';
-            cx.globalAlpha = alpha;
-            cx.font = '12px sans-serif';
-            cx.textAlign = 'center';
-            cx.fillText('💣', s.x, s.y+5);
-        }
+        cx.globalAlpha = alpha;
+        cx.font = '12px sans-serif';
+        cx.textAlign = 'center';
+        if(s.type === 'fast') cx.fillText('💨', s.x, s.y+s.size+12);
+        else if(s.type === 'split') cx.fillText('✨', s.x, s.y+s.size+12);
+        else if(s.type === 'bomb') cx.fillText('💣', s.x, s.y+s.size+12);
     });
     cx.globalAlpha = 1;
-
+    
     // Particles
     particles.forEach(p => {
         cx.fillStyle = p.color;
@@ -329,7 +240,7 @@ function draw() {
         cx.beginPath(); cx.arc(p.x, p.y, 2.5, 0, Math.PI*2); cx.fill();
     });
     cx.globalAlpha = 1;
-
+    
     // Float texts
     floatTexts.forEach(f => {
         cx.fillStyle = f.color;
@@ -339,7 +250,7 @@ function draw() {
         cx.fillText(f.text, f.x, f.y);
     });
     cx.globalAlpha = 1;
-
+    
     cx.restore();
 }
 
@@ -363,17 +274,12 @@ function endGame() {
 }
 
 function share() {
-    const text = `⚡ Spark Dash — $IGNITE\n\nScore: ${score} · Best Combo: x${maxCombo.toFixed(1)}\nSparks/sec: ${(totalTapped/30).toFixed(1)}\n\nHow fast are your reflexes?\n\nPlay: [link]\n@vibevibe_fun`;
+    const text = `⚡ Spark Dash — $IGNITE\n\nScore: ${score} · Best Combo: x${maxCombo.toFixed(1)}\nSparks/sec: ${(totalTapped/30).toFixed(1)}\n\nPlay: [link]\n@vibevibe_fun`;
     open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
 }
 
-// Input
-addEventListener('pointerdown', e => {
-    if(e.target.closest('.game-over') || e.target.closest('.start')) return;
-    tap(e.clientX, e.clientY);
-});
+addEventListener('pointerdown', e => { if(e.target.closest('.game-over') || e.target.closest('.start')) return; tap(e.clientX, e.clientY); });
 
-// Loop
 function loop() { update(); draw(); requestAnimationFrame(loop); }
 loop();
 </script>
