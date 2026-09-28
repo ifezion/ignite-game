@@ -1,288 +1,816 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Spark Dash — $IGNITE</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: Outfit, sans-serif; background: #0c0a08; color: #e8dcc8; min-height: 100vh; overflow: hidden; touch-action: manipulation; }
-        canvas { display: block; }
-        .hud { position: fixed; top: 12px; left: 12px; z-index: 10; pointer-events: none; }
-        .hud-row { display: flex; gap: 8px; margin-bottom: 6px; }
-        .hud-item { background: rgba(0,0,0,0.75); padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px); }
-        .hud-val { font-weight: 700; }
-        .hud-val.score { color: #ffd700; }
-        .hud-val.combo { color: #00ff88; }
-        .hud-val.time { color: #3b82f6; }
-        .timer-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,#3b82f6,#06b6d4); z-index: 15; transition: width 1s linear; }
-        .start { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .start h1 { font-size: 36px; background: linear-gradient(135deg,#3b82f6,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
-        .start p { color: #666; font-size: 14px; margin-bottom: 20px; text-align: center; max-width: 280px; }
-        .btn { padding: 14px 32px; border: none; border-radius: 10px; color: #e8dcc8; font-size: 18px; font-weight: 700; cursor: pointer; }
-        .btn:active { transform: scale(0.96); }
-        .btn-go { background: linear-gradient(135deg,#3b82f6,#06b6d4); }
-        .btn-tw { background: linear-gradient(135deg,#1da1f2,#0d8ecf); }
-        .game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .game-over.show { display: flex; }
-        .game-over h2 { font-size: 28px; color: #3b82f6; margin-bottom: 8px; }
-        .game-over .final { font-size: 52px; font-weight: 800; color: #ffd700; }
-        .game-over .sub { color: #888; font-size: 13px; margin: 8px 0 4px; }
-        .game-over .recap { background: #16130f; border-radius: 12px; padding: 14px; margin: 12px 0; font-size: 13px; width: 260px; }
-        .game-over .recap div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
-        .game-over .recap .k { color: #666; } .game-over .recap .v { color: #e8dcc8; font-weight: 600; }
-        .stock-bar { position: fixed; top: 12px; right: 12px; z-index: 10; pointer-events: none; }
-        .stock-tag { background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 3px; text-align: right; }
-        .stock-tag .n { color: #666; } .stock-tag .p { color: #00ff88; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ignite Chain — $IGNITE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #0c0a08;
+        color: #f5f0e6;
+        overflow: hidden;
+        touch-action: manipulation;
+        -webkit-user-select: none; user-select: none;
+    }
+    canvas { display: block; position: fixed; inset: 0; }
+
+    /* ---------- HUD ---------- */
+    .timer-bar {
+        position: fixed; top: 0; left: 0; height: 6px; width: 100%;
+        background: linear-gradient(90deg, #3b82f6, #d4a017, #fff6dd);
+        z-index: 30; transform-origin: left center;
+    }
+    .hud {
+        position: fixed; top: 14px; left: 12px; right: 12px; z-index: 20;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        pointer-events: none; gap: 8px;
+    }
+    .hud-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hud-item {
+        background: rgba(22, 19, 15, 0.82);
+        border: 1px solid rgba(212, 160, 23, 0.18);
+        padding: 6px 12px; border-radius: 10px;
+        font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: rgba(245, 240, 230, 0.55); backdrop-filter: blur(6px);
+    }
+    .hud-val { font-weight: 800; font-size: 15px; letter-spacing: 0.02em; display: block; }
+    .hud-val.score { color: #d4a017; }
+    .hud-val.best  { color: #f5f0e6; }
+    .hud-val.round { color: #3b82f6; }
+    .hud-val.time  { color: #fff6dd; }
+    .hud-val.chain { color: #3b82f6; }
+    .hud-right { text-align: right; }
+
+    /* ---------- Overlays ---------- */
+    .overlay {
+        position: fixed; inset: 0; z-index: 100;
+        background: rgba(12, 10, 8, 0.88);
+        backdrop-filter: blur(8px);
+        display: none; align-items: center; justify-content: center; flex-direction: column;
+        padding: 24px; text-align: center; overflow-y: auto;
+    }
+    .overlay.show { display: flex; }
+    .panel {
+        background: #16130f;
+        border: 1px solid rgba(212, 160, 23, 0.22);
+        border-radius: 18px;
+        padding: 28px 22px;
+        max-width: 340px; width: 100%;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(212, 160, 23, 0.07);
+    }
+    h1.logo {
+        font-family: 'Cinzel', serif; font-weight: 900;
+        font-size: clamp(30px, 9vw, 44px); line-height: 1.05;
+        background: linear-gradient(135deg, #3b82f6 0%, #d4a017 55%, #fff6dd 100%);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 6px;
+    }
+    .ticker {
+        font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.35em;
+        color: #3b82f6; margin-bottom: 18px; text-transform: uppercase;
+    }
+    .blurb { font-size: 14px; line-height: 1.65; color: rgba(245, 240, 230, 0.72); margin-bottom: 8px; }
+    .blurb b { color: #d4a017; font-weight: 600; }
+    .blurb .blue { color: #3b82f6; font-weight: 600; }
+    .h2 {
+        font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700;
+        color: #d4a017; margin-bottom: 4px;
+    }
+    .h2.blue { color: #3b82f6; }
+    .final {
+        font-family: 'Cinzel', serif; font-size: 54px; font-weight: 900; line-height: 1;
+        background: linear-gradient(135deg, #d4a017, #fff6dd);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        margin: 10px 0 2px;
+    }
+    .sub { font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(245, 240, 230, 0.45); margin-bottom: 16px; }
+    .recap {
+        background: rgba(12, 10, 8, 0.7); border: 1px solid rgba(212, 160, 23, 0.14);
+        border-radius: 12px; padding: 12px 14px; margin: 4px 0 18px; font-size: 13px;
+    }
+    .recap div { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(245, 240, 230, 0.06); }
+    .recap div:last-child { border-bottom: none; }
+    .recap .k { color: rgba(245, 240, 230, 0.5); letter-spacing: 0.04em; }
+    .recap .v { color: #f5f0e6; font-weight: 600; }
+    .recap .v.gold { color: #d4a017; }
+    .recap .v.blue { color: #3b82f6; }
+
+    .btns { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .btn {
+        padding: 15px 28px; border: none; border-radius: 12px;
+        font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700;
+        letter-spacing: 0.06em; cursor: pointer; color: #0c0a08;
+        transition: transform 0.12s ease, filter 0.12s ease;
+    }
+    .btn:active { transform: scale(0.96); filter: brightness(1.1); }
+    .btn-go { background: linear-gradient(135deg, #d4a017, #fff6dd); }
+    .btn-tw { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #f5f0e6; }
+    .btn-ghost {
+        background: transparent; color: rgba(245, 240, 230, 0.65);
+        border: 1px solid rgba(212, 160, 23, 0.3);
+    }
+    .best-line { margin-top: 14px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245, 240, 230, 0.45); }
+    .best-line b { color: #d4a017; }
+
+    /* ---------- Footer ---------- */
+    footer {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        text-align: center; padding: 10px 12px 12px;
+        font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+        background: linear-gradient(180deg, rgba(12, 10, 8, 0), rgba(12, 10, 8, 0.85) 55%);
+        pointer-events: none;
+    }
+    footer a {
+        color: #d4a017; text-decoration: none; pointer-events: auto;
+        border-bottom: 1px solid rgba(212, 160, 23, 0.35); padding-bottom: 1px;
+    }
+    footer a:hover { color: #fff6dd; }
+</style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="timer-bar" id="timerBar" style="width:100%"></div>
+<div class="timer-bar" id="timerBar"></div>
 
 <div class="hud">
     <div class="hud-row">
-        <div class="hud-item">⚡ <span class="hud-val score" id="hScore">0</span></div>
-        <div class="hud-item">🔥 <span class="hud-val combo" id="hCombo">x1</span></div>
-        <div class="hud-item">⏱ <span class="hud-val time" id="hTime">30</span></div>
+        <div class="hud-item">Score<span class="hud-val score" id="hScore">0</span></div>
+        <div class="hud-item">Best<span class="hud-val best" id="hBest">0</span></div>
+        <div class="hud-item">Round<span class="hud-val round" id="hRound">1</span></div>
+    </div>
+    <div class="hud-row hud-right">
+        <div class="hud-item">Chain<span class="hud-val chain" id="hChain">0</span></div>
+        <div class="hud-item">Burn<span class="hud-val time" id="hTime">24</span></div>
     </div>
 </div>
 
-<div class="stock-bar">
-    <div class="stock-tag"><span class="n">NVDA</span> <span class="p">$142</span></div>
-    <div class="stock-tag"><span class="n">AMD</span> <span class="p">$168</span></div>
+<div class="overlay show" id="menu">
+    <div class="panel">
+        <h1 class="logo">Ignite Chain</h1>
+        <div class="ticker">$IGNITE</div>
+        <p class="blurb">A field of cold wicks. One live spark.</p>
+        <p class="blurb"><b>Tap a lit spark</b> to kick the flame — heat races out and torches nearby wicks after a short delay. Chains feed themselves; your kicks bridge the gaps.</p>
+        <p class="blurb">Burn through the field before the <span class="blue">burn timer</span> dies. Light <b>70%+</b> to trigger <b>WILDFIRE!</b> — everything double-scores.</p>
+        <div class="btns">
+            <button class="btn btn-go" onclick="startGame()">🔥 Ignite</button>
+        </div>
+        <div class="best-line">Best score <b id="mBest">0</b> · Biggest chain <b id="mChain">0</b></div>
+    </div>
 </div>
 
-<div class="start" id="startScreen">
-    <h1>⚡ Spark Dash</h1>
-    <p>Tap sparks before they fade! Avoid bombs. Chain combos for massive points.</p>
-    <button class="btn btn-go" onclick="startGame()">⚡ 30s Sprint</button>
+<div class="overlay" id="roundEnd">
+    <div class="panel">
+        <div class="h2" id="reTitle">ROUND CLEARED</div>
+        <div class="sub" id="reSub">The fire spreads</div>
+        <div class="recap" id="reRecap"></div>
+        <div class="btns">
+            <button class="btn btn-go" onclick="nextRound()">Next Round →</button>
+            <button class="btn btn-ghost" onclick="share()">Share on X</button>
+        </div>
+    </div>
 </div>
 
-<div class="game-over" id="go">
-    <h2>⚡ Time's Up!</h2>
-    <div class="final" id="goScore">0</div>
-    <div class="sub">Final Score</div>
-    <div class="recap" id="recap"></div>
-    <button class="btn btn-go" onclick="startGame()">⚡ Play Again</button>
-    <button class="btn btn-tw" onclick="share()">📤 Share</button>
+<div class="overlay" id="gameOver">
+    <div class="panel">
+        <div class="h2 blue">THE FLAME DIED</div>
+        <div class="final" id="goScore">0</div>
+        <div class="sub">Final Score</div>
+        <div class="recap" id="goRecap"></div>
+        <div class="btns">
+            <button class="btn btn-go" onclick="startGame()">🔥 Ignite Again</button>
+            <button class="btn btn-tw" onclick="share()">𝕏 Share on X</button>
+        </div>
+    </div>
 </div>
+
+<footer>Built for the <a href="https://testnet.vibevibe.fun" target="_blank" rel="noopener">vibe/vibe community</a></footer>
 
 <script>
-const cv = document.getElementById('c');
-const cx = cv.getContext('2d');
-let W, H;
-function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
-resize(); addEventListener('resize', resize);
+'use strict';
 
-const TYPES = {
-    std:  { color:'#3b82f6', glow:'rgba(59,130,246,0.3)', life:90, points:10, size:22, speed:1.2 },
-    fast: { color:'#06b6d4', glow:'rgba(6,182,212,0.3)', life:50, points:20, size:18, speed:2.5 },
-    split:{ color:'#a855f7', glow:'rgba(168,85,247,0.3)', life:70, points:15, size:20, speed:1.5 },
-    bomb: { color:'#ff4444', glow:'rgba(255,68,68,0.3)', life:100, points:-30, size:24, speed:0.8 }
-};
+/* ============================== setup ============================== */
+var cv = document.getElementById('c');
+var cx = cv.getContext('2d');
+var W = 0, H = 0, DPR = 1;
 
-let sparks, particles, score, combo, maxCombo, comboDecay, timeLeft, gameActive;
-let spawnTimer, roundTime, totalTapped, totalMissed, firstMissTime;
-let floatTexts, shakeMag;
+function resize() {
+    var oldW = W, oldH = H;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (oldW > 0 && oldH > 0 && wicks.length) {
+        var sx = W / oldW, sy = H / oldH;
+        for (var i = 0; i < wicks.length; i++) { wicks[i].x *= sx; wicks[i].y *= sy; }
+        for (var j = 0; j < particles.length; j++) { particles[j].x *= sx; particles[j].y *= sy; }
+    }
+}
+resize();
+window.addEventListener('resize', resize);
 
-function spawnAt(x, y, type) {
-    const t = TYPES[type];
-    sparks.push({x, y, type, color:t.color, glow:t.glow, life:t.life, maxLife:t.life, size:t.size, vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed, points:t.points});
+/* ============================== state ============================== */
+var STATE_MENU = 0, STATE_PLAY = 1, STATE_ROUND = 2, STATE_OVER = 3;
+
+var state = STATE_MENU;
+var wicks = [], particles = [], floats = [], pending = [];
+var score = 0, best = 0, bestChain = 0, bestRound = 0;
+var round = 1, roundScore = 0, wicksLit = 0, wickTotal = 1;
+var chainCount = 0, roundBestChain = 0, biggestChain = 0;
+var burnTime = 0, burnMax = 24, wildfire = false, heatLevel = 0;
+var shakeMag = 0, elapsed = 0, totalTorched = 0, roundsCleared = 0;
+var cascadeFuel = 0;
+
+var KICK_R = 100, AUTO_R = 62, SPACING = 80;
+
+function $(id) { return document.getElementById(id); }
+
+function loadState() {
+    try {
+        var s = JSON.parse(localStorage.getItem('ignite_game_state') || '{}');
+        best = s.highScore || 0;
+        bestChain = s.bestChain || 0;
+        bestRound = s.bestRound || 0;
+    } catch (e) { /* fresh start */ }
+    $('hBest').textContent = best;
+    $('mBest').textContent = best;
+    $('mChain').textContent = bestChain;
 }
 
-function spawnRandom() {
-    const r = Math.random();
-    let type = 'std';
-    if(r < 0.15) type = 'fast';
-    else if(r < 0.25) type = 'split';
-    else if(r < 0.32) type = 'bomb';
-    const t = TYPES[type];
-    sparks.push({x:60+Math.random()*(W-120), y:60+Math.random()*(H-120), type, color:t.color, glow:t.glow, life:t.life, maxLife:t.life, size:t.size, vx:(Math.random()-0.5)*t.speed, vy:(Math.random()-0.5)*t.speed, points:t.points});
+function saveState() {
+    try {
+        localStorage.setItem('ignite_game_state', JSON.stringify({
+            highScore: best, bestChain: bestChain, bestRound: bestRound
+        }));
+    } catch (e) { /* storage unavailable */ }
 }
 
-function startGame() {
-    document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('go').classList.remove('show');
-    sparks=[]; particles=[]; floatTexts=[];
-    score=0; combo=1; maxCombo=1; comboDecay=0;
-    timeLeft=30; gameActive=true;
-    spawnTimer=0; roundTime=0; totalTapped=0; totalMissed=0; firstMissTime=0; shakeMag=0;
+loadState();
+
+/* ============================== field ============================== */
+function layoutField() {
+    wicks = [];
+    var padX = 26;
+    var top = 108, bot = H - 86;
+    var areaW = W - padX * 2;
+    var areaH = Math.max(180, bot - top);
+
+    /* density scales with round: target wick count grows, cells shrink */
+    var targetN = Math.min(120, 56 + round * 10);
+    var cell = Math.max(38, Math.sqrt(areaW * areaH / targetN));
+    var cols = Math.max(3, Math.round(areaW / cell));
+    var rows = Math.max(2, Math.round(areaH / cell));
+    var cellW = areaW / cols;
+    var cellH = areaH / rows;
+    var cellMax = Math.max(cellW, cellH);
+
+    SPACING = cellMax;
+    KICK_R = cellMax * 1.85;
+    AUTO_R = cellMax * 1.5;
+
+    var r = Math.max(6, cellMax * 0.14);
+    for (var ry = 0; ry < rows; ry++) {
+        for (var rx = 0; rx < cols; rx++) {
+            var jx = (Math.random() - 0.5) * cellW * 0.34;
+            var jy = (Math.random() - 0.5) * cellH * 0.34;
+            wicks.push({
+                x: padX + cellW * (rx + 0.5) + jx,
+                y: top + cellH * (ry + 0.5) + jy,
+                r: r * (0.88 + Math.random() * 0.28),
+                state: 0,              /* 0 unlit, 1 lit, 2 burned */
+                heat: 0, burn: 0, burnMax: 6,
+                autoAt: 0, pending: false,
+                seed: Math.random() * Math.PI * 2
+            });
+        }
+    }
+    wickTotal = wicks.length;
+
+    /* one live spark near the middle */
+    var mid = wicks[Math.floor(wicks.length / 2)];
+    mid.state = 1; mid.heat = 0.25; mid.burn = mid.burnMax; mid.autoAt = 0;
+    wicksLit = 1;
+    floats.push({ x: mid.x, y: mid.y - 26, vy: -26, life: 1.6, max: 1.6, text: 'TAP THE SPARK', color: '#3b82f6', size: 14 });
+}
+
+/* ============================== ignition ============================== */
+function scheduleIgnite(w, delay) {
+    if (w.state !== 0 || w.pending) return;
+    w.pending = true;
+    pending.push({ w: w, t: delay });
+}
+
+function spreadFrom(w, radius, maxTargets) {
+    var cands = [];
+    for (var i = 0; i < wicks.length; i++) {
+        var o = wicks[i];
+        if (o.state !== 0 || o.pending) continue;
+        var dx = o.x - w.x, dy = o.y - w.y;
+        var d2 = dx * dx + dy * dy;
+        if (d2 <= radius * radius) cands.push({ d2: d2, o: o });
+    }
+    cands.sort(function (a, b) { return a.d2 - b.d2; });
+    var n = Math.min(maxTargets, cands.length);
+    for (var k = 0; k < n; k++) {
+        scheduleIgnite(cands[k].o, Math.sqrt(cands[k].d2) / 340 + 0.08);
+    }
+    return n;
+}
+
+function doIgnite(w) {
+    if (w.state !== 0) return;
+    w.state = 1;
+    w.pending = false;
+    w.heat = 0.15;
+    w.burn = w.burnMax;
+    w.autoAt = 0.42 + Math.random() * 0.18;
+
+    chainCount++;
+    wicksLit++;
+    totalTorched++;
+    if (chainCount > roundBestChain) roundBestChain = chainCount;
+    if (chainCount > biggestChain) biggestChain = chainCount;
+
+    var pts = Math.round(10 * (1 + chainCount * 0.12)) * (wildfire ? 2 : 1);
+    score += pts;
+    roundScore += pts;
+    if (score > best) best = score;
+    if (biggestChain > bestChain) bestChain = biggestChain;
+
+    spawnBurst(w.x, w.y, heatTint(0.3 + heatLevel * 0.7), 6);
+    floats.push({ x: w.x, y: w.y - 14, vy: -34, life: 0.9, max: 0.9, text: '+' + pts, color: wildfire ? '#fff6dd' : '#d4a017', size: 13 });
+
+    heatLevel = Math.min(1, wicksLit / wickTotal);
+
+    if (!wildfire && wicksLit / wickTotal >= 0.7) {
+        wildfire = true;
+        shake(16);
+        floats.push({ x: W / 2, y: H * 0.4, vy: -18, life: 2, max: 2, text: 'WILDFIRE!! 2x SCORES', color: '#fff6dd', size: 30 });
+        for (var i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random() * W, y: H * 0.5 + Math.random() * H * 0.5,
+                vx: (Math.random() - 0.5) * 220, vy: -80 - Math.random() * 220,
+                life: 1 + Math.random(), max: 2,
+                size: 1.5 + Math.random() * 3,
+                color: Math.random() < 0.5 ? '#3b82f6' : (Math.random() < 0.5 ? '#d4a017' : '#fff6dd')
+            });
+        }
+    }
+}
+
+function finalizeChain() {
+    if (chainCount <= 0) return;
+    cascadeFuel = 0;
+    var bonus = Math.floor(chainCount * chainCount * 2) * (wildfire ? 2 : 1);
+    score += bonus;
+    roundScore += bonus;
+    if (score > best) best = score;
+    if (chainCount >= 4) {
+        floats.push({ x: W / 2, y: H * 0.34, vy: -22, life: 1.3, max: 1.3, text: 'CHAIN ×' + chainCount + '  +' + bonus, color: chainCount >= 10 ? '#fff6dd' : '#d4a017', size: Math.min(30, 16 + chainCount) });
+    }
+    if (chainCount >= 8) shake(5 + Math.min(12, chainCount));
+    chainCount = 0;
+}
+
+function kick(w) {
+    w.autoAt = 0;
+    cascadeFuel = Math.min(24, cascadeFuel + 8);
+    spawnBurst(w.x, w.y, '#3b82f6', 10);
+    var lit = spreadFrom(w, KICK_R, 4);
+    if (lit === 0) {
+        floats.push({ x: w.x, y: w.y - 18, vy: -28, life: 0.7, max: 0.7, text: 'no fuel nearby', color: 'rgba(245,240,230,0.5)', size: 11 });
+    } else {
+        w.heat = Math.min(1, w.heat + 0.3);
+        shake(Math.min(6, 1.5 + lit * 0.6));
+    }
 }
 
 function tap(x, y) {
-    if(!gameActive) return;
-    let hit = false;
-    for(let i=sparks.length-1; i>=0; i--) {
-        const s = sparks[i];
-        const dx=x-s.x, dy=y-s.y;
-        if(Math.sqrt(dx*dx+dy*dy) < s.size + 10) {
-            hit = true;
-            if(s.type === 'bomb') {
-                score = Math.max(0, score + s.points);
-                combo = 1; comboDecay = 0;
-                spawnBurst(s.x, s.y, '#ff4444', 15);
-                shake(6);
-            } else {
-                const pts = Math.floor(s.points * combo);
-                score += pts;
-                combo += 0.5;
-                comboDecay = 60;
-                if(combo > maxCombo) maxCombo = combo;
-                totalTapped++;
-                spawnBurst(s.x, s.y, s.color, 10);
-                floatTexts.push({x:s.x, y:s.y, text:'+'+pts, color:s.color, life:30});
-                if(s.type === 'split') { spawnAt(s.x-30, s.y, 'fast'); spawnAt(s.x+30, s.y, 'fast'); }
-            }
-            sparks.splice(i, 1);
-            break;
-        }
+    if (state !== STATE_PLAY) return;
+    var bestW = null, bestD = SPACING * 0.85;
+    for (var i = 0; i < wicks.length; i++) {
+        var w = wicks[i];
+        if (w.state !== 1) continue;
+        var dx = x - w.x, dy = y - w.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < bestD) { bestD = d; bestW = w; }
     }
-    if(!hit) { combo = 1; comboDecay = 0; totalMissed++; if(!firstMissTime) firstMissTime = roundTime; }
+    if (bestW) {
+        kick(bestW);
+        return;
+    }
+    /* tapped cold ground — tiny puff so it feels responsive */
+    spawnBurst(x, y, 'rgba(245,240,230,0.35)', 3);
 }
 
+/* ============================== fx ============================== */
 function spawnBurst(x, y, color, n) {
-    for(let i=0;i<n;i++) particles.push({x, y, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, life:15+Math.random()*10, color});
+    for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = 30 + Math.random() * 160;
+        particles.push({
+            x: x, y: y,
+            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
+            life: 0.4 + Math.random() * 0.5, max: 0.9,
+            size: 1.2 + Math.random() * 2.6,
+            color: color
+        });
+    }
 }
 
 function shake(m) { shakeMag = Math.max(shakeMag, m); }
 
-function update() {
-    if(!gameActive) return;
-    roundTime += 1/60;
-    timeLeft -= 1/60;
-    document.getElementById('hTime').textContent = Math.ceil(timeLeft);
-    document.getElementById('timerBar').style.width = (timeLeft/30*100)+'%';
-    if(timeLeft <= 0) { endGame(); return; }
-    
-    if(comboDecay > 0) comboDecay--;
-    else if(combo > 1) combo = Math.max(1, combo - 0.02);
-    
-    spawnTimer++;
-    if(spawnTimer > 40 - Math.min(roundTime, 20)) { spawnTimer = 0; spawnRandom(); }
-    
-    sparks = sparks.filter(s => {
-        s.x += s.vx; s.y += s.vy; s.life--;
-        if(s.x < s.size || s.x > W-s.size) s.vx *= -1;
-        if(s.y < s.size || s.y > H-s.size) s.vy *= -1;
-        if(s.life <= 0) { if(s.type !== 'bomb') totalMissed++; return false; }
-        return true;
-    });
-    
-    particles = particles.filter(p => { p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life--; return p.life>0; });
-    floatTexts = floatTexts.filter(f => { f.y-=1.5;f.life--; return f.life>0; });
-    
-    shakeMag *= 0.9;
-    if(shakeMag < 0.5) shakeMag = 0;
-    
-    updateHUD();
+function mixRGB(a, b, t) {
+    t = Math.max(0, Math.min(1, t));
+    return [
+        Math.round(a[0] + (b[0] - a[0]) * t),
+        Math.round(a[1] + (b[1] - a[1]) * t),
+        Math.round(a[2] + (b[2] - a[2]) * t)
+    ];
+}
+function rgb(c, a) {
+    return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a === undefined ? 1 : a) + ')';
+}
+/* ember -> gold -> white-hot */
+function heatTint(t) {
+    t = Math.max(0, Math.min(1, t));
+    if (t < 0.5) return rgb(mixRGB([255, 118, 40], [212, 160, 23], t * 2));
+    return rgb(mixRGB([212, 160, 23], [255, 246, 221], (t - 0.5) * 2));
+}
+function flamePalette(t) {
+    t = Math.max(0, Math.min(1, t));
+    return {
+        base: mixRGB([59, 130, 246], [212, 160, 23], t * 0.75),   /* token blue -> gold */
+        mid: mixRGB([255, 118, 40], [245, 197, 66], t),           /* ember -> gold */
+        top: mixRGB([212, 160, 23], [255, 246, 221], t)           /* gold -> white-hot */
+    };
+}
+
+/* ============================== update ============================== */
+function update(dt) {
+    elapsed += dt;
+
+    /* particles & floats always animate (juice on menus too) */
+    for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.vy += 60 * dt;
+        p.vx *= (1 - 1.6 * dt);
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+    for (var j = floats.length - 1; j >= 0; j--) {
+        var f = floats[j];
+        f.y += f.vy * dt;
+        f.vy *= (1 - 1.2 * dt);
+        f.life -= dt;
+        if (f.life <= 0) floats.splice(j, 1);
+    }
+
+    shakeMag *= Math.exp(-4 * dt);
+    if (shakeMag < 0.4) shakeMag = 0;
+
+    if (state !== STATE_PLAY) return;
+
+    burnTime -= dt;
+    $('hTime').textContent = Math.max(0, Math.ceil(burnTime));
+    $('timerBar').style.transform = 'scaleX(' + Math.max(0, burnTime / burnMax) + ')';
+
+    /* pending ignitions */
+    for (var k = pending.length - 1; k >= 0; k--) {
+        pending[k].t -= dt;
+        if (pending[k].t <= 0) {
+            doIgnite(pending[k].w);
+            pending.splice(k, 1);
+        }
+    }
+
+    /* lit wicks: burn down, auto-spread, spawn embers */
+    var anyLit = false;
+    for (var m = 0; m < wicks.length; m++) {
+        var w = wicks[m];
+        if (w.state !== 1) continue;
+        anyLit = true;
+        w.burn -= dt;
+        w.heat = Math.min(1, w.heat + dt * 0.22);
+
+        if (w.autoAt > 0) {
+            w.autoAt -= dt;
+            if (w.autoAt <= 0) {
+                if (cascadeFuel > 0) { cascadeFuel--; spreadFrom(w, AUTO_R, 2); }
+            }
+        }
+
+        if (Math.random() < dt * (6 + w.heat * 10)) {
+            particles.push({
+                x: w.x + (Math.random() - 0.5) * w.r * 2,
+                y: w.y - w.r,
+                vx: (Math.random() - 0.5) * 26,
+                vy: -50 - Math.random() * 70,
+                life: 0.5 + Math.random() * 0.6, max: 1.1,
+                size: 1 + Math.random() * 2,
+                color: heatTint(w.heat * 0.8 + 0.1)
+            });
+        }
+
+        if (w.burn <= 0) {
+            w.state = 2;
+            w.heat = 0;
+            spawnBurst(w.x, w.y, 'rgba(90,80,70,0.8)', 4);
+        }
+    }
+
+    /* cascade settled? */
+    if (chainCount > 0 && pending.length === 0) {
+        var autoLeft = false;
+        for (var n = 0; n < wicks.length; n++) {
+            if (wicks[n].state === 1 && wicks[n].autoAt > 0) { autoLeft = true; break; }
+        }
+        if (!autoLeft) finalizeChain();
+    }
+
+    /* flame died out while field remains */
+    if (!anyLit && pending.length === 0) {
+        for (var q = 0; q < wicks.length; q++) {
+            if (wicks[q].state === 0) { endRound(true); return; }
+        }
+    }
+
+    /* whole field torched — round ends on a high note */
+    if (wicksLit >= wickTotal) { endRound(false); return; }
+
+    if (burnTime <= 0) { endRound(false); return; }
+
+    $('hScore').textContent = score;
+    $('hBest').textContent = Math.max(best, score);
+    $('hChain').textContent = chainCount;
+}
+
+/* ============================== draw ============================== */
+function drawWickFlame(w, pal, t) {
+    var flick = 1 + Math.sin(t * 11 + w.seed) * 0.09 + Math.sin(t * 23 + w.seed * 2) * 0.05;
+    var fade = Math.min(1, w.burn / 1.2);
+    var h = w.r * 3.4 * flick * (0.55 + w.heat * 0.65) * (0.55 + fade * 0.45);
+    var ww = w.r * 1.45 * flick;
+
+    /* glow */
+    var g = cx.createRadialGradient(w.x, w.y - h * 0.35, 0, w.x, w.y - h * 0.35, h * 1.6 + 14);
+    g.addColorStop(0, rgb(pal.mid, 0.34));
+    g.addColorStop(0.45, rgb(pal.base, 0.14));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = g;
+    cx.beginPath();
+    cx.arc(w.x, w.y - h * 0.35, h * 1.6 + 14, 0, Math.PI * 2);
+    cx.fill();
+
+    /* outer flame */
+    var grad = cx.createLinearGradient(w.x, w.y, w.x, w.y - h);
+    grad.addColorStop(0, rgb(pal.base));
+    grad.addColorStop(0.55, rgb(pal.mid));
+    grad.addColorStop(1, rgb(pal.top));
+    cx.beginPath();
+    cx.moveTo(w.x - ww, w.y);
+    cx.quadraticCurveTo(w.x - ww * 1.15, w.y - h * 0.5, w.x, w.y - h);
+    cx.quadraticCurveTo(w.x + ww * 1.15, w.y - h * 0.5, w.x + ww, w.y);
+    cx.closePath();
+    cx.fillStyle = grad;
+    cx.fill();
+
+    /* electric-blue core (token flame) */
+    var iw = ww * 0.52, ih = h * 0.5;
+    var core = cx.createLinearGradient(w.x, w.y, w.x, w.y - ih);
+    core.addColorStop(0, 'rgba(59,130,246,0.95)');
+    core.addColorStop(1, 'rgba(147,197,253,0.75)');
+    cx.beginPath();
+    cx.moveTo(w.x - iw, w.y - 1);
+    cx.quadraticCurveTo(w.x - iw * 1.1, w.y - ih * 0.55, w.x, w.y - ih);
+    cx.quadraticCurveTo(w.x + iw * 1.1, w.y - ih * 0.55, w.x + iw, w.y - 1);
+    cx.closePath();
+    cx.fillStyle = core;
+    cx.fill();
 }
 
 function draw() {
     cx.save();
-    if(shakeMag > 0) cx.translate((Math.random()-0.5)*shakeMag,(Math.random()-0.5)*shakeMag);
-    
-    cx.fillStyle = '#0a0a14';
+    if (shakeMag > 0) {
+        cx.translate((Math.random() - 0.5) * shakeMag, (Math.random() - 0.5) * shakeMag);
+    }
+
+    /* soot background */
+    cx.fillStyle = '#0c0a08';
     cx.fillRect(0, 0, W, H);
-    
-    // Grid lines
-    cx.strokeStyle = 'rgba(59,130,246,0.05)';
-    cx.lineWidth = 1;
-    for(let x = 0; x < W; x += 40) { cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke(); }
-    for(let y = 0; y < H; y += 40) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
-    
-    // Sparks (Vibe Viber style)
-    sparks.forEach(s => {
-        const alpha = s.life / s.maxLife;
-        
-        // Glow
-        cx.fillStyle = s.glow;
-        cx.globalAlpha = alpha * 0.6;
-        cx.beginPath(); cx.arc(s.x, s.y, s.size*1.5, 0, Math.PI*2); cx.fill();
-        
-        // Body (cube style)
-        cx.fillStyle = s.color;
-        cx.globalAlpha = alpha;
-        cx.fillRect(s.x-s.size/2, s.y-s.size/2, s.size, s.size);
-        
-        // Eyes (Vibe Viber style)
-        cx.fillStyle = '#fff';
-        cx.fillRect(s.x-s.size/4, s.y-s.size/4, s.size/3, s.size/3);
-        cx.fillRect(s.x+s.size/12, s.y-s.size/4, s.size/3, s.size/3);
-        
-        // Pupils
-        cx.fillStyle = '#0a0a14';
-        cx.fillRect(s.x-s.size/6, s.y-s.size/6, s.size/6, s.size/6);
-        cx.fillRect(s.x+s.size/6, s.y-s.size/6, s.size/6, s.size/6);
-        
-        // Shrinking ring
-        if(s.type !== 'bomb') {
-            cx.strokeStyle = s.color;
-            cx.globalAlpha = alpha * 0.4;
-            cx.lineWidth = 2;
-            cx.beginPath(); cx.arc(s.x, s.y, s.size + (1-alpha)*20, 0, Math.PI*2); cx.stroke();
+
+    /* warm ambient glow, stronger with heat */
+    var amb = cx.createRadialGradient(W / 2, H * 0.55, 0, W / 2, H * 0.55, Math.max(W, H) * 0.75);
+    amb.addColorStop(0, 'rgba(212,160,23,' + (0.03 + heatLevel * 0.09) + ')');
+    amb.addColorStop(1, 'rgba(12,10,8,0)');
+    cx.fillStyle = amb;
+    cx.fillRect(0, 0, W, H);
+
+    /* faint dot lattice */
+    cx.fillStyle = 'rgba(245,240,230,0.045)';
+    for (var gx = 20; gx < W; gx += 42) {
+        for (var gy = 20; gy < H; gy += 42) {
+            cx.fillRect(gx, gy, 1.5, 1.5);
         }
-        
-        // Type indicator
-        cx.globalAlpha = alpha;
-        cx.font = '12px sans-serif';
-        cx.textAlign = 'center';
-        if(s.type === 'fast') cx.fillText('💨', s.x, s.y+s.size+12);
-        else if(s.type === 'split') cx.fillText('✨', s.x, s.y+s.size+12);
-        else if(s.type === 'bomb') cx.fillText('💣', s.x, s.y+s.size+12);
-    });
-    cx.globalAlpha = 1;
-    
-    // Particles
-    particles.forEach(p => {
+    }
+
+    var pal = flamePalette(heatLevel);
+
+    /* unlit + burned wicks */
+    for (var i = 0; i < wicks.length; i++) {
+        var w = wicks[i];
+        if (w.state === 1) continue;
+        cx.strokeStyle = w.state === 2 ? 'rgba(70,62,54,0.9)' : 'rgba(120,106,90,0.75)';
+        cx.lineWidth = Math.max(2, w.r * 0.32);
+        cx.beginPath();
+        cx.moveTo(w.x, w.y + w.r * 1.5);
+        cx.lineTo(w.x, w.y);
+        cx.stroke();
+
+        if (w.state === 2) {
+            cx.fillStyle = 'rgba(38,32,26,0.95)';
+            cx.beginPath(); cx.arc(w.x, w.y, w.r * 0.8, 0, Math.PI * 2); cx.fill();
+        } else {
+            var hg = cx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.r * 2.6);
+            hg.addColorStop(0, 'rgba(212,160,23,0.16)');
+            hg.addColorStop(1, 'rgba(212,160,23,0)');
+            cx.fillStyle = hg;
+            cx.beginPath(); cx.arc(w.x, w.y, w.r * 2.6, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = 'rgba(196,170,132,0.85)';
+            cx.beginPath(); cx.arc(w.x, w.y, w.r * 0.72, 0, Math.PI * 2); cx.fill();
+        }
+    }
+
+    /* lit wicks with flames */
+    for (var j = 0; j < wicks.length; j++) {
+        if (wicks[j].state !== 1) continue;
+        var lw = wicks[j];
+        /* wick stem */
+        cx.strokeStyle = 'rgba(38,32,26,0.95)';
+        cx.lineWidth = Math.max(2, lw.r * 0.34);
+        cx.beginPath();
+        cx.moveTo(lw.x, lw.y + lw.r * 1.6);
+        cx.lineTo(lw.x, lw.y + 1);
+        cx.stroke();
+        drawWickFlame(lw, flamePalette(Math.min(1, lw.heat * 0.55 + heatLevel * 0.65)), elapsed);
+    }
+
+    /* ember particles */
+    for (var k = 0; k < particles.length; k++) {
+        var p = particles[k];
+        cx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
         cx.fillStyle = p.color;
-        cx.globalAlpha = p.life/25;
-        cx.beginPath(); cx.arc(p.x, p.y, 2.5, 0, Math.PI*2); cx.fill();
-    });
+        cx.beginPath();
+        cx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        cx.fill();
+    }
     cx.globalAlpha = 1;
-    
-    // Float texts
-    floatTexts.forEach(f => {
-        cx.fillStyle = f.color;
-        cx.globalAlpha = f.life/30;
-        cx.font = 'bold 16px sans-serif';
+
+    /* float texts */
+    for (var m = 0; m < floats.length; m++) {
+        var f = floats[m];
+        var a = Math.max(0, Math.min(1, f.life / f.max));
+        cx.globalAlpha = a;
+        cx.font = '800 ' + f.size + 'px Outfit, sans-serif';
         cx.textAlign = 'center';
+        cx.textBaseline = 'middle';
+        cx.shadowColor = 'rgba(12,10,8,0.9)';
+        cx.shadowBlur = 8;
+        cx.fillStyle = f.color;
         cx.fillText(f.text, f.x, f.y);
-    });
+        cx.shadowBlur = 0;
+    }
     cx.globalAlpha = 1;
-    
+
+    /* vignette */
+    var vg = cx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.32, W / 2, H / 2, Math.max(W, H) * 0.78);
+    vg.addColorStop(0, 'rgba(12,10,8,0)');
+    vg.addColorStop(1, 'rgba(12,10,8,0.55)');
+    cx.fillStyle = vg;
+    cx.fillRect(0, 0, W, H);
+
     cx.restore();
 }
 
-function updateHUD() {
-    document.getElementById('hScore').textContent = score;
-    document.getElementById('hCombo').textContent = 'x'+combo.toFixed(1);
+/* ============================== flow ============================== */
+function roundTimerFor(r) { return Math.min(32, 22 + r * 1.2); }
+
+function startGame() {
+    round = 1;
+    score = 0;
+    totalTorched = 0;
+    roundsCleared = 0;
+    biggestChain = 0;
+    heatLevel = 0;
+    beginRound();
 }
 
-function endGame() {
-    gameActive = false;
-    document.getElementById('goScore').textContent = score;
-    document.getElementById('recap').innerHTML = `
-        <div><span class="k">Best Combo</span><span class="v">x${maxCombo.toFixed(1)}</span></div>
-        <div><span class="k">Sparks Tapped</span><span class="v">${totalTapped}</span></div>
-        <div><span class="k">Sparks/Sec</span><span class="v">${(totalTapped/30).toFixed(1)}</span></div>
-        <div><span class="k">First Miss</span><span class="v">${firstMissTime?firstMissTime.toFixed(1)+'s':'Perfect!'}</span></div>
-        <div><span class="k">Accuracy</span><span class="v">${totalTapped+totalMissed?Math.round(totalTapped/(totalTapped+totalMissed)*100):0}%</span></div>
-    `;
-    document.getElementById('go').classList.add('show');
-    localStorage.setItem('ignite_hi', Math.max(score, parseInt(localStorage.getItem('ignite_hi')||'0')));
+function beginRound() {
+    state = STATE_PLAY;
+    roundScore = 0;
+    roundBestChain = 0;
+    chainCount = 0;
+    wildfire = false;
+    cascadeFuel = 0;
+    pending = [];
+    particles = [];
+    floats = [];
+    burnMax = roundTimerFor(round);
+    burnTime = burnMax;
+    layoutField();
+    $('menu').classList.remove('show');
+    $('roundEnd').classList.remove('show');
+    $('gameOver').classList.remove('show');
+    $('hRound').textContent = round;
+    $('hScore').textContent = score;
+    $('hTime').textContent = Math.ceil(burnTime);
+    $('timerBar').style.transform = 'scaleX(1)';
+}
+
+function nextRound() {
+    round++;
+    if (round > bestRound) bestRound = round;
+    beginRound();
+}
+
+function endRound(flameDied) {
+    finalizeChain();
+    var coverage = wicksLit / wickTotal;
+    var cleared = coverage >= 0.35;
+    var perfect = wicksLit >= wickTotal;
+
+    if (score > best) best = score;
+    if (biggestChain > bestChain) bestChain = biggestChain;
+    if (round > bestRound) bestRound = round;
+    saveState();
+
+    if (cleared) {
+        roundsCleared++;
+        state = STATE_ROUND;
+        $('reTitle').textContent = perfect ? 'PERFECT BURN' : (wildfire ? 'WILDFIRE ROUND' : 'ROUND CLEARED');
+        $('reSub').textContent = perfect ? 'Every wick consumed' : (flameDied ? 'The flame burned out early' : (wildfire ? 'Everything burned 2x' : 'The fire spreads'));
+        $('reRecap').innerHTML =
+            '<div><span class="k">Round Score</span><span class="v gold">+' + roundScore + '</span></div>' +
+            '<div><span class="k">Biggest Chain</span><span class="v blue">×' + roundBestChain + '</span></div>' +
+            '<div><span class="k">Field Ignited</span><span class="v">' + Math.round(coverage * 100) + '%</span></div>' +
+            '<div><span class="k">Wicks Torched</span><span class="v">' + wicksLit + ' / ' + wickTotal + '</span></div>' +
+            '<div><span class="k">Wildfire Bonus</span><span class="v">' + (wildfire ? 'TRIGGERED 2x' : 'not reached') + '</span></div>';
+        $('roundEnd').classList.add('show');
+    } else {
+        state = STATE_OVER;
+        $('goScore').textContent = score;
+        $('goRecap').innerHTML =
+            '<div><span class="k">Biggest Chain</span><span class="v blue">×' + biggestChain + '</span></div>' +
+            '<div><span class="k">Rounds Cleared</span><span class="v">' + roundsCleared + '</span></div>' +
+            '<div><span class="k">Wicks Torched</span><span class="v">' + totalTorched + '</span></div>' +
+            '<div><span class="k">Best Score</span><span class="v gold">' + best + '</span></div>' +
+            '<div><span class="k">Cause</span><span class="v">' + (flameDied ? 'flame died out' : 'burn timer expired') + '</span></div>';
+        $('gameOver').classList.add('show');
+    }
+    $('hBest').textContent = best;
 }
 
 function share() {
-    const text = `⚡ Spark Dash — $IGNITE\n\nScore: ${score} · Best Combo: x${maxCombo.toFixed(1)}\nSparks/sec: ${(totalTapped/30).toFixed(1)}\n\nPlay: [link]\n@vibevibe_fun`;
-    open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
+    var coverage = Math.round((wicksLit / wickTotal) * 100);
+    var lines = [
+        '🔥 Ignite Chain — $IGNITE',
+        '',
+        'Score: ' + score + ' · Biggest chain: ×' + biggestChain,
+        'Torched ' + coverage + '% of the field in round ' + round + '. ' + (wildfire ? 'WILDFIRE achieved. 🔥🔥' : 'The embers are still warm.'),
+        '',
+        'Think you can out-burn me?',
+        '@vibevibe_fun'
+    ];
+    var url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(lines.join('\n'));
+    window.open(url, '_blank', 'noopener');
 }
 
-addEventListener('pointerdown', e => { if(e.target.closest('.game-over') || e.target.closest('.start')) return; tap(e.clientX, e.clientY); });
+/* ============================== input & loop ============================== */
+window.addEventListener('pointerdown', function (e) {
+    if (e.target.closest && e.target.closest('.overlay')) return;
+    if (e.target.closest && e.target.closest('footer')) return;
+    tap(e.clientX, e.clientY);
+});
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
+var lastTs = 0;
+function loop(ts) {
+    if (!lastTs) lastTs = ts;
+    var dt = Math.min(0.05, (ts - lastTs) / 1000);
+    lastTs = ts;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
